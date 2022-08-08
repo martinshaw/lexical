@@ -9,6 +9,7 @@
 import {moveLeft, redo, undo} from '../keyboardShortcuts/index.mjs';
 import {
   assertHTML,
+  assertSelection,
   clearEditor,
   click,
   focusEditor,
@@ -633,6 +634,37 @@ test.describe('Markdown', () => {
         </p>
       `,
     );
+  });
+
+  test('can adjust selection after text match transformer', async ({page}) => {
+    await focusEditor(page);
+    await page.keyboard.type('Hello  world');
+    await moveLeft(page, 6);
+    await page.keyboard.type('[link](https://lexical.dev)');
+    await assertHTML(
+      page,
+      html`
+        <p
+          class="PlaygroundEditorTheme__paragraph PlaygroundEditorTheme__ltr"
+          dir="ltr">
+          <span data-lexical-text="true">Hello</span>
+          <a
+            href="https://lexical.dev"
+            class="PlaygroundEditorTheme__link PlaygroundEditorTheme__ltr"
+            dir="ltr">
+            <span data-lexical-text="true">link</span>
+          </a>
+          <span data-lexical-text="true">world</span>
+        </p>
+      `,
+    );
+    // Selection starts after newly created link element
+    await assertSelection(page, {
+      anchorOffset: 0,
+      anchorPath: [0, 2, 0],
+      focusOffset: 0,
+      focusPath: [0, 2, 0],
+    });
   });
 });
 
